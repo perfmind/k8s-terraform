@@ -1,0 +1,33 @@
+version: 3
+automerge: true
+delete_source_branch_on_merge: true
+parallel_plan: true
+parallel_apply: true
+projects:
+- name: prod-east-cluster
+  dir: cluster/prod-east
+  autoplan:
+    when_modified: ["../../modules/**/*.tf", "*.tf*"]
+  workflow: myworkflow
+  apply_requirements: [mergeable, approved]
+- name: prod-west-cluster
+  dir: cluster/prod-west
+  autoplan:
+    when_modified: ["../../modules/**/*.tf", "*.tf*"]
+  workflow: myworkflow
+  apply_requirements: [mergeable, approved]
+workflows:
+  myworkflow:
+    plan:
+      steps:
+      - env:
+          name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/terampil-kubernetes-sa/service-account.json
+      - init
+      - plan
+    apply:
+      steps:
+      - env:
+          name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/terampil-kubernetes-sa/service-account.json
+      - apply
