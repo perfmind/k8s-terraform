@@ -5,8 +5,8 @@ terraform {
     google-beta = ">= 4.0.0"
   }
   backend "gcs" {
-    bucket = "terampil-terraform-state"
-    prefix = "state/gke-prod-east-cluster/"
+    bucket = "k8s-sm-terraform-state"
+    prefix = "state/gke-main-cluster/"
   }
 }
 
@@ -28,25 +28,25 @@ data "google_client_config" "client" {}
 data "google_client_openid_userinfo" "terraform_user" {}
 
 module "network" {
-  source = "../../modules/vpc"
-  project_id = "terampil-education"
+  source       = "../../modules/vpc"
+  project_id   = var.host_project
   network_name = "vpc-main"
 }
 
 module "subnet" {
   source        = "../../modules/subnet"
-  host_project  = "terampil-education"
+  host_project  = var.host_project
   host_network  = module.network.network_self_link
   subnet_region = "asia-southeast1"
-  subnet_name   = "subnet-prod-east-cluster"
+  subnet_name   = "subnet-main-cluster"
   ip_cidr_range = "10.100.16.0/20"
   secondary_ranges = [
     {
-      range_name    = "subnet-prod-east-cluster-pods"
+      range_name    = "subnet-main-cluster-pods"
       ip_cidr_range = "10.102.0.0/18"
     },
     {
-      range_name    = "subnet-prod-east-cluster-services"
+      range_name    = "subnet-main-cluster-services"
       ip_cidr_range = "10.102.64.0/18"
     }
   ]
@@ -55,15 +55,16 @@ module "subnet" {
 # CLUSTER
 module "k8s-cluster" {
   source                = "../../modules/k8s-cluster"
-  host_project          = "terampil-education"
+  dataset               = "sm_k8s_metering_dataset"
+  host_project          = var.host_project
   host_network          = "vpc-main"
-  service_project       = "terampil-education"
+  service_project       = var.service_project
   subnet                = module.subnet.subnet_self_link
   region                = "asia-southeast1"
-  cluster_name          = "prod-east-cluster"
+  cluster_name          = var.cluster_name
   cluster_location      = "asia-southeast1"
-  pods_range            = "subnet-prod-east-cluster-pods"
-  services_range        = "subnet-prod-east-cluster-services"
+  pods_range            = "subnet-main-cluster-pods"
+  services_range        = "subnet-main-cluster-services"
   master_range          = "172.16.0.16/28"
   max_cpu               = 32
   max_memory            = 64
@@ -79,4 +80,13 @@ module "k8s-cluster" {
       image_type   = "COS_CONTAINERD"
     },
   ]
+}
+
+module "kms" {
+  source          = "../../modules/kms"
+  kms_name        = "argocd-kms"
+  kms_location    = "asia-southeast1"
+  service_project = var.service_project
+  keyring_name    = "sops-k8s"
+  purpose         = ""
 }

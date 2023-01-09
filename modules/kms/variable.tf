@@ -6,14 +6,20 @@ variable "kms_name" {
   type = string
 }
 
+variable "keyring_name" {
+  type = string
+}
+
 variable "kms_location" {
   type = string
 }
 
 variable "rotation_period" {
-  type = string
+  type    = string
+  default = "7776000s"
 }
 
 variable "purpose" {
-  type = string
+  type    = string
+  default = "ENCRYPT_DECRYPT"
 }

@@ -46,6 +46,12 @@ resource "google_project_iam_member" "service_account-network_roles" {
   member  = "serviceAccount:${google_service_account.service_account.email}"
 }
 
+resource "google_bigquery_dataset" "dataset" {
+  dataset_id = var.dataset
+  location   = "asia-southeast1"
+  project    = var.service_project
+}
+
 resource "google_container_cluster" "primary" {
   provider = google-beta
   name     = var.cluster_name
@@ -76,7 +82,7 @@ resource "google_container_cluster" "primary" {
     enable_resource_consumption_metering = true
 
     bigquery_destination {
-      dataset_id = "terampil_k8s_metering_dataset"
+      dataset_id = google_bigquery_dataset.dataset.dataset_id
     }
   }
 

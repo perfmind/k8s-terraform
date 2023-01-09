@@ -123,3 +123,7 @@ variable "etcd_encryption" {
   type    = bool
   default = false
 }
+
+variable "dataset" {
+  type = string
+}
