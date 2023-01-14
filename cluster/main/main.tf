@@ -70,7 +70,7 @@ module "k8s-cluster" {
   max_memory            = 64
   binary_authorization  = "DISABLED"
   autoscaling_profile   = "OPTIMIZE_UTILIZATION"
-  nodepool_auto_upgrade = false
+  nodepool_auto_upgrade = true
 
   #APP POOL
   app_pools = [
@@ -88,5 +88,5 @@ module "kms" {
   kms_location    = "asia-southeast1"
   service_project = var.service_project
   keyring_name    = "sops-k8s"
-  purpose         = ""
+  purpose         = "ENCRYPT_DECRYPT"
 }

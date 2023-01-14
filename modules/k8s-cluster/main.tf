@@ -46,12 +46,6 @@ resource "google_project_iam_member" "service_account-network_roles" {
   member  = "serviceAccount:${google_service_account.service_account.email}"
 }
 
-resource "google_bigquery_dataset" "dataset" {
-  dataset_id = var.dataset
-  location   = "asia-southeast1"
-  project    = var.service_project
-}
-
 resource "google_container_cluster" "primary" {
   provider = google-beta
   name     = var.cluster_name
@@ -68,13 +62,14 @@ resource "google_container_cluster" "primary" {
   default_max_pods_per_node = 110
 
   enable_shielded_nodes = true
+  datapath_provider = "ADVANCED_DATAPATH"
 
   binary_authorization {
     evaluation_mode = var.binary_authorization
   }
 
   release_channel {
-    channel = "UNSPECIFIED"
+    channel = "REGULAR"
   }
 
   resource_usage_export_config {
@@ -82,7 +77,7 @@ resource "google_container_cluster" "primary" {
     enable_resource_consumption_metering = true
 
     bigquery_destination {
-      dataset_id = google_bigquery_dataset.dataset.dataset_id
+      dataset_id = var.dataset
     }
   }
 
@@ -90,7 +85,7 @@ resource "google_container_cluster" "primary" {
 
   addons_config {
     network_policy_config {
-      disabled = false
+      disabled = true
     }
     dns_cache_config {
       enabled = true

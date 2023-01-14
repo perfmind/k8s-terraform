@@ -1,18 +1,18 @@
-resource "google_kms_key_ring" "cluster-keyring" {
+data "google_kms_key_ring" "cluster-keyring" {
   project  = var.service_project
   name     = var.keyring_name
   location = var.kms_location # xxx: doesn't support zonal clusters
 }
 
-resource "google_kms_crypto_key" "cluster-key" {
-  name            = var.kms_name
-  key_ring        = google_kms_key_ring.cluster-keyring.id
-  rotation_period = var.rotation_period
-  purpose         = var.purpose
-  lifecycle {
-    prevent_destroy = true
-  }
-}
+# resource "google_kms_crypto_key" "cluster-key" {
+#   name            = var.kms_name
+#   key_ring        = data.google_kms_key_ring.cluster-keyring.id
+#   rotation_period = var.rotation_period
+#   purpose         = var.purpose
+#   lifecycle {
+#     prevent_destroy = true
+#   }
+# }
 
 #data "google_project" "service_project" {
 #  project_id = var.service_project
