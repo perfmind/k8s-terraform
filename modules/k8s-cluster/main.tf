@@ -62,7 +62,6 @@ resource "google_container_cluster" "primary" {
   default_max_pods_per_node = 110
 
   enable_shielded_nodes = true
-  datapath_provider = "ADVANCED_DATAPATH"
 
   binary_authorization {
     evaluation_mode = var.binary_authorization
@@ -87,8 +86,11 @@ resource "google_container_cluster" "primary" {
     network_policy_config {
       disabled = true
     }
-    dns_cache_config {
-      enabled = true
+    gce_persistent_disk_csi_driver_config {
+      enabled = false
+    }
+    http_load_balancing {
+      disabled = true
     }
   }
 
@@ -133,10 +135,6 @@ resource "google_container_cluster" "primary" {
     enabled = var.vertical_pod_autoscaling
   }
 
-  workload_identity_config {
-    workload_pool = "${var.service_project}.svc.id.goog"
-  }
-
   authenticator_groups_config {
     security_group = "gke-security-groups@qasir.id"
   }
@@ -146,15 +144,18 @@ resource "google_container_cluster" "primary" {
     resource_limits {
       resource_type = "cpu"
       maximum       = var.max_cpu
+      minimum       = 1
     }
     resource_limits {
       resource_type = "memory"
       maximum       = var.max_memory
+      minimum       = 1
     }
 
     autoscaling_profile = var.autoscaling_profile
 
     auto_provisioning_defaults {
+      disk_size       = 30
       service_account = google_service_account.service_account.email
       oauth_scopes = [
         "https://www.googleapis.com/auth/cloud-platform",
@@ -185,7 +186,7 @@ resource "google_container_node_pool" "pool" {
 
   initial_node_count = lookup(each.value, "initial_node_count_pool", 1)
   autoscaling {
-    min_node_count = lookup(each.value, "min_node_count_pool", 1)
+    min_node_count = lookup(each.value, "min_node_count_pool", 2)
     max_node_count = lookup(each.value, "max_node_count_pool", 100)
   }
 
@@ -196,15 +197,11 @@ resource "google_container_node_pool" "pool" {
     machine_type    = lookup(each.value, "machine_type", "n1-standard-1")
     service_account = google_service_account.service_account.email
 
-    disk_size_gb = lookup(each.value, "disk_size_gb", 50)
+    disk_size_gb = lookup(each.value, "disk_size_gb", 30)
     disk_type    = lookup(each.value, "disk_type", "pd-standard")
 
     metadata = {
       disable-legacy-endpoints = "true"
-    }
-
-    workload_metadata_config {
-      mode = "GKE_METADATA"
     }
 
     tags = []
