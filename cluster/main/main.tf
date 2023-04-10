@@ -5,7 +5,7 @@ terraform {
     google-beta = ">= 4.0.0"
   }
   backend "gcs" {
-    bucket = "k8s-sm-terraform-state"
+    bucket = "k8s-fk-terraform-state"
     prefix = "state/gke-main-cluster/"
   }
 }
@@ -55,14 +55,14 @@ module "subnet" {
 # CLUSTER
 module "k8s-cluster" {
   source                = "../../modules/k8s-cluster"
-  dataset               = "sm_k8s_metering_dataset"
+  dataset               = "fk_k8s_metering_dataset"
   host_project          = var.host_project
-  host_network          = "vpc-main"
+  host_network          = module.network.network_self_link
   service_project       = var.service_project
   subnet                = module.subnet.subnet_self_link
   region                = "asia-southeast1"
   cluster_name          = var.cluster_name
-  cluster_location      = "asia-southeast1"
+  cluster_location      = "asia-southeast1-b"
   pods_range            = "subnet-main-cluster-pods"
   services_range        = "subnet-main-cluster-services"
   master_range          = "172.16.0.16/28"
