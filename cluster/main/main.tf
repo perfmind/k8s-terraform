@@ -55,7 +55,7 @@ module "subnet" {
 # CLUSTER
 module "k8s-cluster" {
   source                = "../../modules/k8s-cluster"
-  dataset               = "fk_k8s_metering_dataset"
+  dataset               = var.bg_dataset
   host_project          = var.host_project
   host_network          = module.network.network_self_link
   service_project       = var.service_project
